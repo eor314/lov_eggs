@@ -27,6 +27,9 @@ if __name__ == '__main__':
         # read image as gray scale
         im = cv2.imread(img_ptf, 0)
 
+        # make 0.0 to 1
+        im = cv2.normalize(im.astype(float), None, 0.0, 1.0, cv2.NORM_MINMAX)
+
         # create empty label layer of same size
         lab = np.zeros(im.shape)
 
