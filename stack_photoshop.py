@@ -5,12 +5,12 @@ from PIL import Image
 from pytoshop.user import nested_layers
 import pytoshop.enums as pse
 
-import apeep.timers as t
+#import apeep.timers as t
 
 
 # from ipdb import set_trace as db
 
-@t.timer
+#@t.timer
 def save_stack(img, labels, dest, fmt=['rgb', 'tif', 'psd']):
     # rotate images back to vertical (top will always be on the right)
     # (easier to deal with on tablet)
