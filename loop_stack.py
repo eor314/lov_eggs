@@ -38,3 +38,5 @@ if __name__ == '__main__':
 
         # make the psd file
         save_stack(im, lab, outdir, fmt=['psd'])
+
+        print("done with", img_ptf)

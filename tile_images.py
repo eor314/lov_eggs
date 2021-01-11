@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
         # remove dims and serialize back into master dictionary
         tmp = tmp.drop(columns=['dims'])
-        mos_imgs[kk] = tmp.to_string()
+        mos_imgs[kk] = tmp.to_json(orient='records')
 
         # save the mosaic to the desired directory
         cv2.imwrite(os.path.join(output_path, f'{kk}.{file_type}'), tmp_mos)
@@ -164,6 +164,6 @@ if __name__ == '__main__':
         print('done with', kk)
 
     # save the dictionary as JSON for retrieving masks later
-    with open(os.path.join(output_path, 'dims_coords.json'), 'w+') as ff:
+    with open(os.path.join(output_path, 'dims_coords.json'), 'w') as ff:
         json.dump(mos_imgs, ff)
         ff.close()
