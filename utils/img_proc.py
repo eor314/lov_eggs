@@ -40,28 +40,38 @@ def fill_gap(bn_img, struct='disk', dim=3):
     return out
 
 
-def big_region(bn_img, conn=2, bg=0):
+def big_region(bn_img, conn=2, bg=0, pad=0):
     """
     return a binary mask with only the biggest subregion
     :param bn_img: binary mask [np.array]
     :param conn: how to establish connectivity. [1==cross, 2==box]
     :param bg: pixel value to consider as background
-    :return out: mask with original dims and just one region
+    :param pad: pixel value to pad bounding box. if zero, assume box not needed
+    :return out_mask: mask with original dims and just one region
+    :return out_bbox: bounding box coordinates
     """
 
     # label connected components
     lab = morphology.label(bn_img, connectivity=conn, background=bg)
 
     # measure the area of each region
-    props = measure.regionprops_table(lab, properties=['area', 'label'])
+    props = measure.regionprops(lab)
 
     # get the index of the largest
-    ind = np.argmax(props['area'])
+    ars = [item.area for item in props]
+    ind = np.argmax(ars)
 
     # select the biggest region
-    out = lab == props['label'][ind]
+    out_mask = lab == props[ind].label
 
-    return out.astype(np.int)
+    # get the bounding box
+    if pad != 0:
+        out_bbox = props[ind].bbox
+        out_bbox = np.asarray(out_bbox) + np.array([-pad, -pad, pad, pad])
+
+        return out_mask.astype(np.int), out_bbox
+    else:
+        return out_mask.astype(np.int)
 
 
 def pad_img(img, new_dim):
