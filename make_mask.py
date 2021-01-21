@@ -23,6 +23,8 @@ if __name__ == '__main__':
                         help='connectivity to consider in connected component analysis [see skimage label for details]')
     parser.add_argument('--back_gr', metavar='back_gr', default=0,
                         help='pixel value to consider background [see skimage label for details]')
+    parser.add_argument('--padding', metavar='padding', default=5,
+                        help='pixel value to pad bounding box [set to zero if do not need]')
 
     args = parser.parse_args()
 
@@ -53,7 +55,7 @@ if __name__ == '__main__':
         mask = fill_gap(mask, struct=args.struct_el, dim=args.stel_size)
 
         # select the biggest region
-        mask = big_region(mask, conn=args.connect, bg=args.back_gr)
+        mask = big_region(mask, conn=args.connect, bg=args.back_gr, pad=args.padding)
         mask = mask*255
 
         outpath = os.path.join(outdir, os.path.basename(img))
