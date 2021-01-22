@@ -48,7 +48,7 @@ def big_region(bn_img, conn=2, bg=0, pad=0):
     :param bg: pixel value to consider as background
     :param pad: pixel value to pad bounding box. if zero, assume box not needed
     :return out_mask: mask with original dims and just one region
-    :return out_bbox: bounding box coordinates
+    :return out_bbox: bounding box coordinates of upper left and lower right corners
     """
 
     # label connected components
