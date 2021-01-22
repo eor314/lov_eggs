@@ -4,6 +4,7 @@ import cv2
 import os
 import glob
 from utils.img_proc import thresh, fill_gap, big_region
+from utils.xml_ops import populate_voc
 
 
 if __name__ == '__main__':
@@ -37,12 +38,19 @@ if __name__ == '__main__':
 
     # create the output directory (assuming VOC2012 file structure)
     outdir = os.path.join(outptf, 'Segmentation')
+    anndir = os.path.join(outptf, 'Annotations')
 
     if not os.path.exists(outdir):
         os.mkdir(outdir)
 
+    if not os.path.exists(anndir):
+        os.mkdir(anndir)
+
     flag = 0
     for img in imgs:
+
+        # create the path to save out the segmentation
+        outpath = os.path.join(outdir, os.path.basename(img))
 
         # read in the image as numpy array in uint8
         orig = cv2.imread(img)
@@ -55,12 +63,14 @@ if __name__ == '__main__':
         mask = fill_gap(mask, struct=args.struct_el, dim=args.stel_size)
 
         # select the biggest region
-        mask = big_region(mask, conn=args.connect, bg=args.back_gr, pad=args.padding)
+        mask, bbox = big_region(mask, conn=args.connect, bg=args.back_gr, pad=args.padding)
         mask = mask*255
 
-        outpath = os.path.join(outdir, os.path.basename(img))
-
         cv2.imwrite(outpath, mask)
+
+        # populate the XML annotation file
+        populate_voc(r'D:\LOV\lov_voc_template.xml',
+                     anndir, img, [bbox], ['Copepod'])
 
         flag += 1
         if flag % 100 == 0:
