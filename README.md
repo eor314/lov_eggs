@@ -1,6 +1,6 @@
 # lov_eggs
 
-Create and work with mosaics for segmentation annotation in Photoshop. Tested with Anaconda run in PyCharm on Windows 10.
+Preprocess plankton image data for object detection, segmentation, and deep regression models. Create and parse mosaics for segmentation annotation in Photoshop. Tested with Anaconda run in PyCharm on Windows 10.
 
 Requirements:
 - numpy
@@ -10,8 +10,10 @@ Requirements:
 - cv2
 - argparse
 - pandas
+- sklearn
+- bs4
 
-## NameError name packbits is not defined
+### NameError name packbits is not defined
 pytoshop has a NameError in python 3.7 when trying to write psd files. Was able to fix from this <a href='https://github.com/mdboom/pytoshop/issues/9#issuecomment-534904333'>issue discussion</a>:
 
 > open this file:
