@@ -56,15 +56,18 @@ def layers2gray(img, layer=None):
 
             # composite channels to PIL
             temp = lay.composite()
-            temp = temp.covert('LA')
+            temp = temp.convert('L')
 
             out.append(temp)
 
     else:
         # composite and return just the layers specified in the input list
+        # check that layer is indeed a list
+        assert isinstance(layer, list), "make sure layer list is in fact a list"
+
         for lay_name in layer:
             temp = img.composite(layer_filter=lambda x: x.is_visible() and x.name == lay_name)
-            temp = temp.convert('LA')
+            temp = temp.convert('L')
 
             out.append(temp)
 
@@ -74,9 +77,27 @@ def layers2gray(img, layer=None):
 def retrieve_regions(img, dim_coords):
     """
     slice and dice a mosaic back into regions of the original size
-    :param img: gray scale PIL or numpy array
+    :param img: gray scale PIL
     :param dim_coords: pandas dictionary containing coordinates and dimensions of subregions
     :return: dictionary of subregions
     """
 
-    #TODO Iterate over each ROI and snip out according to coordinates and dimensions
+    # make into numpy array
+    xx = np.array(img)
+
+    # rotate back to original coordinates
+    xx = np.rot90(xx)
+
+    out = {}
+    # iterate over each row of the data frame and retrieve the mask
+    for idx, row in dim_coords.iterrows():
+        ww = row['width']
+        hh = row['height']
+        coord = row['upper_left_coord']
+
+        sub = xx[coord[0]:coord[0] + hh, coord[1]:coord[1] + ww]
+        out[row['path']] = sub
+
+    #TODO save masks out? Process VOC directly in this loop?
+
+    return out
