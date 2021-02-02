@@ -15,6 +15,8 @@ if __name__ == '__main__':
 
     outdir = r'D:\LOV\Eggs copepods\img-lists'
 
+    # mos_ptf = [line for line in mos_ptf if os.path.basename(line) in ['Sans titre2.psd', 'Sans titre15.psd']]
+
     for mos in mos_ptf:
 
         psd = read_psd(mos)
