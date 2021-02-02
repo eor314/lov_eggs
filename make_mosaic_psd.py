@@ -2,6 +2,7 @@ import numpy as np
 import os
 import glob
 import cv2
+import sys
 from PIL import Image
 import pandas as pd
 import argparse
@@ -77,7 +78,15 @@ if __name__ == '__main__':
         rmtree(output_path)
 
     # get the list of images
-    imgs = image_list(path_to_imgs, file_type)
+    if os.path.isdir(path_to_imgs):
+        imgs = image_list(path_to_imgs, file_type)
+    elif os.path.isfile(path_to_imgs):
+        with open(path_to_imgs, 'r') as ff:
+            imgs = list(ff)
+            ff.close()
+        imgs = [line.strip() for line in imgs]
+    else:
+        sys.exit('Must give a valid path to image files or list of image files.')
 
     # get the chunks of paths
     mos_imgs = divide_list(imgs, num_imgs)

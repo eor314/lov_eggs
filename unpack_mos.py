@@ -2,7 +2,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import json
-import os, glob
+import os
+import glob
 from utils.mosaic_tools import read_psd, read_nested_pd, layers2gray, retrieve_regions
 from utils.img_proc import thresh, fill_gap, big_region
 
