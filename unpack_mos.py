@@ -4,32 +4,80 @@ import matplotlib.pyplot as plt
 import json
 import os
 import glob
+import sys
+import argparse
 from utils.mosaic_tools import read_psd, read_nested_pd, layers2gray, retrieve_regions
 from utils.img_proc import thresh, fill_gap, big_region
 
-# open the library with the coordinates
-ptf = '/Users/eorenstein/Documents/eggs-data/LOV_arctic_egg_mosaics_2021/dims_coords.json'
 
-with open(ptf, 'r') as ff:
-    all_coords = json.load(ff)
-    ff.close()
+def str2bool(v):
+    """
+    returns a boolean from argparse input
+    """
 
-moz = glob.glob(os.path.join('/Users/eorenstein/Documents/eggs-data/Eggs copepods', '*.psd'))
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected')
 
-# select just the last mosaic for now
-mos = [line for line in moz if '19' in os.path.basename(line)]
-mos = mos[0]
 
-# open the correct dictionary
-coords = read_nested_pd(all_coords, 'mos_19')
+if __name__ == '__main__':
 
-psd = read_psd(mos)
-lays = layers2gray(read_psd(mos))  # this grabs both the mask and the original mosaic
-#img = layers2gray(read_psd(mos), layer='Layer 002')  # this just grabs the mask
+    # define parser
+    parser = argparse.ArgumentParser(description='Unpack annotated mosaics saved as PSD files')
 
-# show the original mosaics
-orig = lays[0]
-mask = lays[1]
+    parser.add_argument('path_to_mos', metavar='path_to_mos', help='Absolute path to directory of mosaics')
+    parser.add_argument('path_to_coords', metavar='path_to_coords', help='Path to coordinate file or image list')
+    parser.add_argument('output_path', metavar='output_path', help='Where to save the output mosaics')
+    parser.add_argument('--make_voc', metavar='make_voc',
+                        default=False, help='Indicate whether voc format is needed [bool]')
+    parser.add_argument('--file_type', metavar='file_type',
+                        default='jpg', choices=['jpg', 'png', 'tiff'], help='type of file to look for')
+
+    args = parser.parse_args()
+
+    path_to_mos = args.path_to_mos
+    path_to_coords = args.path_to_coords
+    file_type = args.file_type
+    output_path = args.output_path
+    make_voc = str2bool(args.make_voc)
+
+    # if only processing one mosaic, put it into a dummy list for subsequent loops
+    if os.path.isfile(path_to_mos):
+        moz = [path_to_mos]
+    elif os.path.isdir(path_to_mos):
+        moz = glob.glob(os.path.join(path_to_mos, '*.psd'))
+    else:
+        sys.exit('Check that mosaic input is either path to PSD file or directory containing PSD files')
+
+    if os.path.isfile(path_to_coords):
+
+        assert os.path.splitext(path_to_coords)[1] == '.json', 'Coordinate file must be json document'
+
+        with open(path_to_coords, 'r') as ff:
+            all_coords = json.load(ff)
+            ff.close()
+
+        moz = glob.glob(os.path.join('/Users/eorenstein/Documents/eggs-data/Eggs copepods', '*.psd'))
+
+        # select just the last mosaic for now
+        mos = [line for line in moz if '19' in os.path.basename(line)]
+        mos = mos[0]
+
+        # open the correct dictionary
+        coords = read_nested_pd(all_coords, 'mos_19')
+
+        psd = read_psd(mos)
+        lays = layers2gray(read_psd(mos))  # this grabs both the mask and the original mosaic
+        #img = layers2gray(read_psd(mos), layer='Layer 002')  # this just grabs the mask
+
+        # show the original mosaics
+        orig = lays[0]
+        mask = lays[1]
 
 # display the original annotated mosaic
 fig, ax = plt.subplots()
