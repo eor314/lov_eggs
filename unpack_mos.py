@@ -1,13 +1,15 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import json
 import os
 import glob
 import sys
+import re
 import argparse
+from cv2 import imwrite
 from utils.mosaic_tools import read_psd, read_nested_pd, layers2gray, retrieve_regions
 from utils.img_proc import thresh, fill_gap, big_region
+from utils.xml_ops import populate_voc
 
 
 def str2bool(v):
@@ -30,14 +32,17 @@ if __name__ == '__main__':
     # define parser
     parser = argparse.ArgumentParser(description='Unpack annotated mosaics saved as PSD files')
 
-    parser.add_argument('path_to_mos', metavar='path_to_mos', help='Absolute path to directory of mosaics')
+    parser.add_argument('path_to_mos', metavar='path_to_mos', help='Absolute path to mosaic or directory of mosaics')
     parser.add_argument('path_to_coords', metavar='path_to_coords', help='Path to coordinate file or image list')
-    parser.add_argument('output_path', metavar='output_path', help='Where to save the output mosaics')
+    parser.add_argument('output_path', metavar='output_path', help='Where to save the output masks')
     parser.add_argument('--make_voc', metavar='make_voc',
-                        default=False, help='Indicate whether voc format is needed [bool]')
+                        default=True, help='Indicate whether voc xml files is needed [bool]')
+    parser.add_argument('--annoataion_template', metavar='annotation_template',
+                        default=r'D:\LOV\lov_voc_template.xml', help='Location of template for VOC xml annotation file')
     parser.add_argument('--file_type', metavar='file_type',
                         default='jpg', choices=['jpg', 'png', 'tiff'], help='type of file to look for')
 
+    # parse inputs from command line
     args = parser.parse_args()
 
     path_to_mos = args.path_to_mos
@@ -45,6 +50,7 @@ if __name__ == '__main__':
     file_type = args.file_type
     output_path = args.output_path
     make_voc = str2bool(args.make_voc)
+    anntem = args.annotation_template
 
     # if only processing one mosaic, put it into a dummy list for subsequent loops
     if os.path.isfile(path_to_mos):
@@ -54,6 +60,7 @@ if __name__ == '__main__':
     else:
         sys.exit('Check that mosaic input is either path to PSD file or directory containing PSD files')
 
+    # if the input is a json document, process accordingly
     if os.path.isfile(path_to_coords):
 
         assert os.path.splitext(path_to_coords)[1] == '.json', 'Coordinate file must be json document'
@@ -62,75 +69,62 @@ if __name__ == '__main__':
             all_coords = json.load(ff)
             ff.close()
 
-        moz = glob.glob(os.path.join('/Users/eorenstein/Documents/eggs-data/Eggs copepods', '*.psd'))
+        # loop over the mosaics
+        for mos in moz:
 
-        # select just the last mosaic for now
-        mos = [line for line in moz if '19' in os.path.basename(line)]
-        mos = mos[0]
+            # read in the mosaic
+            psd = read_psd(mos)
+            lays = layers2gray(psd)  # get list of layers
+            orig = lays[0]
+            mask = lays[1]
 
-        # open the correct dictionary
-        coords = read_nested_pd(all_coords, 'mos_19')
+            # get the right coordinate set (assumes the numbering in the mosaic basename is consistent with keys in
+            # coordinate dictionary)
+            num = os.path.splitext(os.path.basename(mos))[0]
+            num = re.sub('[^0-9]', '', num)
 
-        psd = read_psd(mos)
-        lays = layers2gray(read_psd(mos))  # this grabs both the mask and the original mosaic
-        #img = layers2gray(read_psd(mos), layer='Layer 002')  # this just grabs the mask
+            # use the number to get the coordinate pd array
+            coords = read_nested_pd(all_coords, f'mos_{num}')
 
-        # show the original mosaics
-        orig = lays[0]
-        mask = lays[1]
+            # get the mask associated with each region
+            mask_rois = retrieve_regions(mask, coords)
 
-# display the original annotated mosaic
-fig, ax = plt.subplots()
-ax.imshow(np.rot90(psd.numpy())[0:1500, 0::])
-ax.set_xticks([])
-ax.set_yticks([])
-ax.set_title('Mosaic annotated by Louis')
+            # cut out the subregions using original coordinates and ROI dimensions.
+            orig_rois = retrieve_regions(orig, coords)
 
-# cut out the subregions using original coordinates and ROI dimensions.
-orig_rois = retrieve_regions(orig, coords)
-mask_rois = retrieve_regions(mask, coords)
+            # iterate over the images, generate and saves masks
+            # assumes that the dictonary keys are file paths
+            for kk in orig_rois.keys():
 
-# process the psd file too for display purposes
-psd_rois = retrieve_regions(psd.numpy(), coords)
+                # make a mask of the entire object
+                tmp = fill_gap(thresh(orig_rois[kk]))
+                gen_msk, genbb = big_region(tmp, pad=5)  # assume default settings
 
-# just work on biggest subregion for now
-psd_big = psd_rois['D:\\LOV\\all_eggs_noscale\\62057085.jpg']
-cope = orig_rois['D:\\LOV\\all_eggs_noscale\\62057085.jpg']
-egg_mask = mask_rois['D:\\LOV\\all_eggs_noscale\\62057085.jpg']
+                # binarize and invert the egg mask
+                egg_msk = mask_rois[kk]
+                egg_msk[np.nonzero(egg_msk < 250)] = 0
+                egg_msk = egg_msk.astype(np.float32) / 255
+                egg_msk = 1 - egg_msk
 
-# make pixel mask, again working on biggest region
-tmp = fill_gap(thresh(cope))
-cope_msk = big_region(tmp)
+                # get the egg bounding box
+                _, eggbb = big_region(egg_msk, pad=5)
 
-# binarize the egg mask
-egg_msk = egg_mask.astype(np.float32) / 255
-egg_msk = 1 - egg_msk  # invert
+                # make the bounding boxes into one array
+                bbox = np.vstack((genbb, eggbb))
+                # add them together to get the complete mask
+                # [0 == background, 1 == copepod, 2 == eggs]
+                msk = gen_msk + egg_msk
 
-# ratio of egg pixels to copepod pixels
-ovig_pct = np.sum(egg_msk)/np.sum(cope_msk.astype(np.float32)-egg_msk)
+                # for now assume using VOC file structure
+                out_msk = os.path.join(output_path, 'Segmentation', os.path.basename(kk))
+                imwrite(out_msk, msk)
 
-# add the masks together. now 0==background, 1==copepod, 2==eggs
-msk = cope_msk + egg_msk
+                out_roi = os.path.join(output_path, 'JPEGImages', os.path.basename(kk))
 
-# display the biggest copepod and associated mask
-fig1, ax1 = plt.subplots(2, 2)
+                if not os.path.exists(out_roi):
+                    imwrite(out_roi, orig_rois[kk])
 
-ax1[0,0].imshow(psd_big)
-ax1[0,0].set_xticks([])
-ax1[0,0].set_yticks([])
-ax1[0,0].set_title('ROI w/ mask')
-
-ax1[0,1].imshow(cope, cmap='gray')
-ax1[0,1].set_xticks([])
-ax1[0,1].set_yticks([])
-ax1[0,1].set_title('ROI')
-
-ax1[1,0].imshow(egg_mask, cmap='gray')
-ax1[1,0].set_xticks([])
-ax1[1,0].set_yticks([])
-ax1[1,0].set_title('eggs via manual seg')
-
-ax1[1,1].imshow(msk, cmap='gray')
-ax1[1,1].set_xticks([])
-ax1[1,1].set_yticks([])
-ax1[1,1].set_title('auto cope + eggs')
+                # make the VOC file
+                populate_voc(anntem, os.path.join(output_path, 'Annotations'),
+                             kk, bbox, ['Copepod', 'Eggs'])
+#TODO add text file handling

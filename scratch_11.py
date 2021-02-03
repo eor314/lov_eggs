@@ -106,3 +106,77 @@ with open('/Users/eorenstein/Documents/eggs-data/img-lists/to_process_020221.txt
     for line in proc:
         ff.write(line + '\n')
     ff.close()
+
+"""
+## display rois and masks
+# display the original annotated mosaic
+fig, ax = plt.subplots()
+ax.imshow(np.rot90(psd.numpy())[0:1500, 0::])
+ax.set_xticks([])
+ax.set_yticks([])
+ax.set_title('Mosaic annotated by Louis')
+
+# process the psd file too for display purposes
+psd_rois = retrieve_regions(psd.numpy(), coords)
+
+# just work on biggest subregion for now
+psd_big = psd_rois['D:\\LOV\\all_eggs_noscale\\62057085.jpg']
+cope = orig_rois['D:\\LOV\\all_eggs_noscale\\62057085.jpg']
+egg_mask = mask_rois['D:\\LOV\\all_eggs_noscale\\62057085.jpg']
+
+# make pixel mask, again working on biggest region
+tmp = fill_gap(thresh(cope))
+cope_msk = big_region(tmp)
+
+# binarize the egg mask
+egg_msk = egg_mask.astype(np.float32) / 255
+egg_msk = 1 - egg_msk  # invert
+
+# ratio of egg pixels to copepod pixels
+ovig_pct = np.sum(egg_msk)/np.sum(cope_msk.astype(np.float32)-egg_msk)
+
+# add the masks together. now 0==background, 1==copepod, 2==eggs
+msk = cope_msk + egg_msk
+
+# display the biggest copepod and associated mask
+fig1, ax1 = plt.subplots(2, 2)
+
+ax1[0,0].imshow(psd_big)
+ax1[0,0].set_xticks([])
+ax1[0,0].set_yticks([])
+ax1[0,0].set_title('ROI w/ mask')
+
+ax1[0,1].imshow(cope, cmap='gray')
+ax1[0,1].set_xticks([])
+ax1[0,1].set_yticks([])
+ax1[0,1].set_title('ROI')
+
+ax1[1,0].imshow(egg_mask, cmap='gray')
+ax1[1,0].set_xticks([])
+ax1[1,0].set_yticks([])
+ax1[1,0].set_title('eggs via manual seg')
+
+ax1[1,1].imshow(msk, cmap='gray')
+ax1[1,1].set_xticks([])
+ax1[1,1].set_yticks([])
+ax1[1,1].set_title('auto cope + eggs')
+"""
+
+
+import matplotlib.patches as patches
+
+# Create figure and axes
+fig,ax = plt.subplots(1)
+
+# Display the image
+ax.imshow(im)
+
+
+
+# Create a Rectangle patch
+rect = patches.Rectangle((50,100),40,30,linewidth=1,edgecolor='r',facecolor='none')
+
+# Add the patch to the Axes
+ax.add_patch(rect)
+
+plt.show()
