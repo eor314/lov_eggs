@@ -6,6 +6,7 @@ import sys
 import re
 import argparse
 from cv2 import imwrite
+from skimage.color import label2rgb
 from utils.mosaic_tools import read_psd, read_nested_pd, layers2gray, retrieve_regions, get_subregions
 from utils.img_proc import thresh, fill_gap, big_region, get_dim
 from utils.xml_ops import populate_voc
@@ -120,7 +121,10 @@ if __name__ == '__main__':
 
                 # for now assume using VOC file structure
                 out_msk = os.path.join(output_path, 'Segmentation', os.path.basename(kk))
-                imwrite(out_msk, msk)
+
+                # make mask into color image for storage [default for skimage routine sets cope as red, eggs as blue]
+                msk = label2rgb(msk, bg_label=0)
+                imwrite(out_msk, msk*255)
 
                 out_roi = os.path.join(output_path, 'JPEGImages', os.path.basename(kk))
 
@@ -212,10 +216,12 @@ if __name__ == '__main__':
                     bbox = np.array(genbb)
                     msk = gen_msk
 
-
                 # for now assume using VOC file structure
                 out_msk = os.path.join(output_path, 'Segmentation', os.path.basename(roi_ptf))
-                imwrite(out_msk, msk)
+
+                # make mask into color image for storage [default for skimage routine sets cope as red, eggs as blue]
+                msk = label2rgb(msk, bg_label=0)
+                imwrite(out_msk, msk*255)
 
                 out_roi = os.path.join(output_path, 'JPEGImages', os.path.basename(roi_ptf))
 
