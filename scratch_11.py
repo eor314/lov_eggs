@@ -61,7 +61,7 @@ for ptf in ptfs:
     print(f'done with {xx}')
 
 
-
+# make plots of pairs of extracted rois to make sure everything in lining up
 ptfs = glob.glob(os.path.join('/Users/eorenstein/Documents/eggs-data/img-lists','*.txt'))
 ptfs.sort()
 
@@ -162,21 +162,20 @@ ax1[1,1].set_yticks([])
 ax1[1,1].set_title('auto cope + eggs')
 """
 
+# reformat image lists for mac
+outfile = '/Users/eorenstein/Documents/eggs-data/img-lists-mac'
+ptf = '/Users/eorenstein/Documents/eggs-data/all_eggs_noscale'
+os.mkdir(outfile)
+infiles = glob.glob(os.path.join('/Users/eorenstein/Documents/eggs-data/img-lists', 'Sans*'))
 
-import matplotlib.patches as patches
+for infile in infiles:
+    with open(infile, 'r') as ff:
+        tmp = list(ff)
+        ff.close()
+    tmp = [line.strip() for line in tmp]
+    tmp = [os.path.join(ptf, line.split('\\')[-1]) for line in tmp]
+    with open(os.path.join(outfile, os.path.basename(infile)), 'w') as ff:
+        for line in tmp:
+            ff.write(line+'\n')
+        ff.close()
 
-# Create figure and axes
-fig,ax = plt.subplots(1)
-
-# Display the image
-ax.imshow(im)
-
-
-
-# Create a Rectangle patch
-rect = patches.Rectangle((50,100),40,30,linewidth=1,edgecolor='r',facecolor='none')
-
-# Add the patch to the Axes
-ax.add_patch(rect)
-
-plt.show()
