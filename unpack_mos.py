@@ -157,9 +157,7 @@ if __name__ == '__main__':
             # rotate arrays and make normalize
             # must rotate since since PSD files aligned for annotation on a tablet
             orig = np.rot90(orig)
-            orig = orig.astype(np.float64) / 255
             mask = np.rot90(mask)
-            mask = mask.astype(np.float64) / 255
 
             # get the number of pixels per ROI dimension in the mosaic
             mm = orig.shape[0] // roi_per_dim
@@ -175,7 +173,7 @@ if __name__ == '__main__':
                 roi_ptf = roi_ptfs[ii]
 
                 # get the original ROI dimensions
-                ht, wd = get_dim(roi_ptf)
+                wd, ht = get_dim(roi_ptf)
 
                 # get the coordinates of the upper left corner of original ROI in the padded version
                 xx = (mm - wd) // 2
@@ -192,7 +190,6 @@ if __name__ == '__main__':
                 gen_msk, genbb = big_region(tmp, pad=5)  # assume default settings
 
                 # binarize and invert the egg mask
-                egg_msk = egg_msk
                 egg_msk[np.nonzero(egg_msk < 250)] = 0
                 egg_msk = egg_msk.astype(np.float32) / 255
                 egg_msk = 1 - egg_msk

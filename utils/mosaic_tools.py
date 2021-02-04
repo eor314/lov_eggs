@@ -100,6 +100,7 @@ def retrieve_regions(img, dim_coords):
 
     return out
 
+
 def get_subregions(img, roi_dim=10):
     """
     slice and dice a mosaic into subregions of even size. assumes square mosaic (example, 10 rois x 10 rois).
