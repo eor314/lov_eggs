@@ -195,14 +195,23 @@ if __name__ == '__main__':
                 egg_msk = 1 - egg_msk
 
                 # get the egg bounding box
-                _, eggbb = big_region(egg_msk, pad=5)
+                try:
+                    _, eggbb = big_region(egg_msk, pad=5)
 
-                # make the bounding boxes into one array
-                bbox = np.vstack((genbb, eggbb))
+                    # make the bounding boxes into one array
+                    bbox = np.vstack((genbb, eggbb))
 
-                # add them together to get the complete mask
-                # [0 == background, 1 == copepod, 2 == eggs]
-                msk = gen_msk + egg_msk
+                    # add them together to get the complete mask
+                    # [0 == background, 1 == copepod, 2 == eggs]
+                    msk = gen_msk + egg_msk
+
+                except ValueError:
+
+                    # handler if no egg mask
+                    print('no eggs in', os.path.basename(roi_ptf))
+                    bbox = np.array(genbb)
+                    msk = gen_msk
+
 
                 # for now assume using VOC file structure
                 out_msk = os.path.join(output_path, 'Segmentation', os.path.basename(roi_ptf))

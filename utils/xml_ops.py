@@ -40,9 +40,12 @@ def populate_voc(template, outdir, imgptf, bbox, label):
 
     # copy the object tag for however many bounding boxes are in the ROI
     flag = 1
-    while flag < bbox.shape[0]:
-        bs_data.annotation.append(copy.copy(bs_data.object))
-        flag += 1
+
+    # check that there is more than one labeled region in image
+    if len(bbox.shape) > 1:
+        while flag < bbox.shape[0]:
+            bs_data.annotation.append(copy.copy(bs_data.object))
+            flag += 1
 
     # select all empty elements in the xml document
     nns = bs_data.select('name:empty')  # list of empty name tags
@@ -51,23 +54,39 @@ def populate_voc(template, outdir, imgptf, bbox, label):
     xmaxs = bs_data.select('xmax:empty')
     ymaxs = bs_data.select('ymax:empty')
 
-    # bounding box info
-    # for now just select the first tuple and hardcode other into [012221]
-    for ii in range(bbox.shape[0]):
+    if len(nns) > 1:
+        # bounding box info
+        # for now just select the first tuple and hardcode other into [012221]
+        for ii in range(bbox.shape[0]):
+            # enter the label string
+            name = nns[ii]
+            name.string = label[ii]
+
+            # enter the corresponding bbox location
+            bb = bbox[ii, ::]
+            xmin = xmins[ii]
+            xmin.string = str(bb[1])
+            ymin = ymins[ii]
+            ymin.string = str(bb[0])
+            xmax = xmaxs[ii]
+            xmax.string = str(bb[3])
+            ymax = ymaxs[ii]
+            ymax.string = str(bb[2])
+    else:
+        ii = 0
         # enter the label string
         name = nns[ii]
         name.string = label[ii]
 
         # enter the corresponding bbox location
-        bb = bbox[ii, ::]
         xmin = xmins[ii]
-        xmin.string = str(bb[1])
+        xmin.string = str(bbox[1])
         ymin = ymins[ii]
-        ymin.string = str(bb[0])
+        ymin.string = str(bbox[0])
         xmax = xmaxs[ii]
-        xmax.string = str(bb[3])
+        xmax.string = str(bbox[3])
         ymax = ymaxs[ii]
-        ymax.string = str(bb[2])
+        ymax.string = str(bbox[2])
 
     outpath = os.path.join(outdir, os.path.splitext(os.path.basename(imgptf))[0]+'.xml')
 
