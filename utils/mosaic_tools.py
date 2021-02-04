@@ -98,6 +98,23 @@ def retrieve_regions(img, dim_coords):
         sub = xx[coord[0]:coord[0] + hh, coord[1]:coord[1] + ww]
         out[row['path']] = sub
 
-    #TODO save masks out? Process VOC directly in this loop?
-
     return out
+
+def get_subregions(img, roi_dim=10):
+    """
+    slice and dice a mosaic into subregions of even size. assumes square mosaic (example, 10 rois x 10 rois).
+    :param img: numpy array of mosaic
+    :param roi_dim: number of rois per side [int]
+    :return: list of numpy arrays of square dimensions
+    """
+
+    # get the dimensions of the padded rois in the current array
+    mm = img.shape[0] // roi_dim
+    nn = img.shape[1] // roi_dim
+
+    # slice array accordingly (will return square subregions)
+    subs = [img[x:x + mm, y:y + nn] for x in range(0, img.shape[0], mm)
+            for y in range(0, img.shape[1], nn)]
+
+    return subs
+
