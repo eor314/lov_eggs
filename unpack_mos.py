@@ -135,6 +135,8 @@ if __name__ == '__main__':
                 populate_voc(anntem, os.path.join(output_path, 'Annotations'),
                              kk, bbox, ['Copepod', 'Eggs'])
 
+            print('done with', mos)
+
     # process data if image paths are stored as text files.
     # assumes text files contain list of ROIs in each mosaic
     elif os.path.isdir(path_to_coords):
@@ -231,6 +233,8 @@ if __name__ == '__main__':
                 # make the VOC file
                 populate_voc(anntem, os.path.join(output_path, 'Annotations'),
                              roi_ptf, bbox, ['Copepod', 'Eggs'])
+
+            print('done with', mos)
 
     else:
         sys.exit('Ensure that path_to_coords points to directory or text files of json document with coordinate dictionaries')
