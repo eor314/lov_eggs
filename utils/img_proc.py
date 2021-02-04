@@ -1,6 +1,18 @@
 import numpy as np
 import cv2
+from PIL import Image
 from skimage import morphology, measure
+
+
+def get_dim(img):
+    """
+    return biggest of image dimensions
+    :param img: absolute path to image [str]
+    :return: max(width, height) [int]
+    """
+    im = Image.open(img)
+    wid, hgt = im.size
+    return [wid, hgt]
 
 
 def thresh(img, threshold=245):

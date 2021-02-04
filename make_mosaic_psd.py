@@ -3,23 +3,11 @@ import os
 import glob
 import cv2
 import sys
-from PIL import Image
 import pandas as pd
 import argparse
 import json
 from shutil import rmtree
-from utils.img_proc import tile_images
-
-
-def get_dim(img):
-    """
-    return biggest of image dimensions
-    :param img: absolute path to image [str]
-    :return: max(width, height) [int]
-    """
-    im = Image.open(img)
-    wid, hgt = im.size
-    return [wid, hgt]
+from utils.img_proc import tile_images, get_dim
 
 
 def image_list(ptf, ext='jpg'):
