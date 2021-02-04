@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import json
 import os
 import glob
@@ -7,8 +6,8 @@ import sys
 import re
 import argparse
 from cv2 import imwrite
-from utils.mosaic_tools import read_psd, read_nested_pd, layers2gray, retrieve_regions
-from utils.img_proc import thresh, fill_gap, big_region
+from utils.mosaic_tools import read_psd, read_nested_pd, layers2gray, retrieve_regions, get_subregions
+from utils.img_proc import thresh, fill_gap, big_region, get_dim
 from utils.xml_ops import populate_voc
 
 
@@ -37,10 +36,12 @@ if __name__ == '__main__':
     parser.add_argument('output_path', metavar='output_path', help='Where to save the output masks')
     parser.add_argument('--make_voc', metavar='make_voc',
                         default=True, help='Indicate whether voc xml files is needed [bool]')
-    parser.add_argument('--annoataion_template', metavar='annotation_template',
+    parser.add_argument('--annotation_template', metavar='annotation_template',
                         default=r'D:\LOV\lov_voc_template.xml', help='Location of template for VOC xml annotation file')
     parser.add_argument('--file_type', metavar='file_type',
                         default='jpg', choices=['jpg', 'png', 'tiff'], help='type of file to look for')
+    parser.add_argument('--roi_per_dim', metavar='roi_per_dim', default=10,
+                        help='the number of ROIs per axis in the mosaic')
 
     # parse inputs from command line
     args = parser.parse_args()
@@ -51,6 +52,7 @@ if __name__ == '__main__':
     output_path = args.output_path
     make_voc = str2bool(args.make_voc)
     anntem = args.annotation_template
+    roi_per_dim = int(args.roi_per_dim)
 
     # if only processing one mosaic, put it into a dummy list for subsequent loops
     if os.path.isfile(path_to_mos):
@@ -111,6 +113,7 @@ if __name__ == '__main__':
 
                 # make the bounding boxes into one array
                 bbox = np.vstack((genbb, eggbb))
+
                 # add them together to get the complete mask
                 # [0 == background, 1 == copepod, 2 == eggs]
                 msk = gen_msk + egg_msk
@@ -127,4 +130,95 @@ if __name__ == '__main__':
                 # make the VOC file
                 populate_voc(anntem, os.path.join(output_path, 'Annotations'),
                              kk, bbox, ['Copepod', 'Eggs'])
-#TODO add text file handling
+
+    # process data if image paths are stored as text files.
+    # assumes text files contain list of ROIs in each mosaic
+    elif os.path.isdir(path_to_coords):
+
+        # loop over the mosaics
+        for mos in moz:
+
+            # get the text file corresponding to the mosaic
+            xx = os.path.splitext(os.path.basename(mos))[0]
+            tmp = os.path.join(path_to_coords, xx + '.txt')
+
+            with open(tmp, 'r') as ff:
+                roi_ptfs = list(ff)
+                ff.close()
+
+            roi_ptfs = [line.strip() for line in roi_ptfs]
+
+            # read in the mosaic
+            psd = read_psd(mos)
+            lays = layers2gray(psd)  # get list of layers
+            orig = np.array(lays[0])  # make the layer into array from PIL
+            mask = np.array(lays[1])
+
+            # rotate arrays and make normalize
+            # must rotate since since PSD files aligned for annotation on a tablet
+            orig = np.rot90(orig)
+            orig = orig.astype(np.float64) / 255
+            mask = np.rot90(mask)
+            mask = mask.astype(np.float64) / 255
+
+            # get the number of pixels per ROI dimension in the mosaic
+            mm = orig.shape[0] // roi_per_dim
+            nn = orig.shape[1] // roi_per_dim
+
+            # make into subregions
+            orig_subs = get_subregions(orig, roi_dim=roi_per_dim)
+            mask_subs = get_subregions(mask, roi_dim=roi_per_dim)
+
+            # loop over the image paths, extract, save as necessary
+            for ii in range(len(roi_ptfs)):
+
+                roi_ptf = roi_ptfs[ii]
+
+                # get the original ROI dimensions
+                ht, wd = get_dim(roi_ptf)
+
+                # get the coordinates of the upper left corner of original ROI in the padded version
+                xx = (mm - wd) // 2
+                yy = (mm - ht) // 2
+
+                # crop it out
+                orig_crop = orig_subs[ii]
+                orig_crop = orig_crop[yy:yy+ht, xx:xx+wd]
+                egg_msk = mask_subs[ii]
+                egg_msk = egg_msk[yy:yy+ht, xx:xx+wd]
+
+                # get the full copepod mask
+                tmp = fill_gap(thresh(orig_crop))
+                gen_msk, genbb = big_region(tmp, pad=5)  # assume default settings
+
+                # binarize and invert the egg mask
+                egg_msk = egg_msk
+                egg_msk[np.nonzero(egg_msk < 250)] = 0
+                egg_msk = egg_msk.astype(np.float32) / 255
+                egg_msk = 1 - egg_msk
+
+                # get the egg bounding box
+                _, eggbb = big_region(egg_msk, pad=5)
+
+                # make the bounding boxes into one array
+                bbox = np.vstack((genbb, eggbb))
+
+                # add them together to get the complete mask
+                # [0 == background, 1 == copepod, 2 == eggs]
+                msk = gen_msk + egg_msk
+
+                # for now assume using VOC file structure
+                out_msk = os.path.join(output_path, 'Segmentation', os.path.basename(roi_ptf))
+                imwrite(out_msk, msk)
+
+                out_roi = os.path.join(output_path, 'JPEGImages', os.path.basename(roi_ptf))
+
+                if not os.path.exists(out_roi):
+                    imwrite(out_roi, orig_crop)
+
+                # make the VOC file
+                populate_voc(anntem, os.path.join(output_path, 'Annotations'),
+                             roi_ptf, bbox, ['Copepod', 'Eggs'])
+
+    else:
+        sys.exit('Ensure that path_to_coords points to directory or text files of json document with coordinate dictionaries')
