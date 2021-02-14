@@ -14,6 +14,8 @@ if __name__ == '__main__':
 
     parser.add_argument('path_to_imgs', metavar='path_to_imgs', help='Absolute path to image dir')
     parser.add_argument('output_path', metavar='output_path', help='where to store the processed images')
+    parser.add_argument('template', metavar='template',
+                        default='lov_voc_template.xml', help='absolute path to xml template file lives')
     parser.add_argument('--file_type', metavar='file_type',
                         default='jpg', choices=['jpg', 'png', 'tiff'], help='type of file to look for')
     parser.add_argument('--thresh_val', metavar='tresh_val', default=245, help='uint8 value for naive thresholding')
@@ -32,6 +34,7 @@ if __name__ == '__main__':
     ptf = args.path_to_imgs
     outptf = args.output_path
     ftype = args.file_type
+    template = args.template
 
     # list of images
     imgs = glob.glob(os.path.join(ptf, f'*.{ftype}'))
@@ -69,7 +72,7 @@ if __name__ == '__main__':
         cv2.imwrite(outpath, mask)
 
         # populate the XML annotation file
-        populate_voc(r'D:\LOV\lov_voc_template.xml',
+        populate_voc(template,
                      anndir, img, [bbox], ['Copepod'])
 
         flag += 1
