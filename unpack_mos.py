@@ -38,7 +38,7 @@ if __name__ == '__main__':
     parser.add_argument('--make_voc', metavar='make_voc',
                         default=True, help='Indicate whether voc xml files is needed [bool]')
     parser.add_argument('--annotation_template', metavar='annotation_template',
-                        default=r'D:\LOV\lov_voc_template.xml', help='Location of template for VOC xml annotation file')
+                        default='lov_voc_template.xml', help='Location of template for VOC xml annotation file')
     parser.add_argument('--file_type', metavar='file_type',
                         default='jpg', choices=['jpg', 'png', 'tiff'], help='type of file to look for')
     parser.add_argument('--roi_per_dim', metavar='roi_per_dim', default=10,
@@ -154,6 +154,12 @@ if __name__ == '__main__':
 
             roi_ptfs = [line.strip() for line in roi_ptfs]
 
+            # check if roi list in windows format and reset as necessary
+            if len(roi_ptfs[0].split('\\')) > 1:
+                roi_ptfs = [line.split('\\')[-1] for line in roi_ptfs]
+                roi_ptfs = [os.path.join('/Users/eorenstein/Documents/eggs-data/all_eggs_noscale',
+                                         line) for line in roi_ptfs]  # hard coded for now (ECO 2/15/21)
+
             # read in the mosaic
             psd = read_psd(mos)
             lays = layers2gray(psd)  # get list of layers
@@ -192,8 +198,8 @@ if __name__ == '__main__':
                 egg_msk = egg_msk[yy:yy+ht, xx:xx+wd]
 
                 # get the full copepod mask
-                tmp = fill_gap(thresh(orig_crop))
-                gen_msk, genbb = big_region(tmp, pad=5)  # assume default settings
+                tmp_mask = fill_gap(thresh(orig_crop))
+                gen_msk, genbb = big_region(tmp_mask, pad=5)  # assume default settings
 
                 # binarize and invert the egg mask
                 egg_msk[np.nonzero(egg_msk < 250)] = 0
