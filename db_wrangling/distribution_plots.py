@@ -39,8 +39,6 @@ for ii, item in enumerate(uniq_copes.iteritems()):
     ax1.text(item[1]+3, ii+0.25, f'({np.round(lat,2)}, {np.round(lon,2)})',
              color='blue', fontweight='bold')
 
-
-
 fig1, ax1 = plt.subplots()
 uniq_eggs.plot(kind='barh', ax=ax1, color='m')
 make_axes_area_auto_adjustable(ax1)
