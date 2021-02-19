@@ -43,6 +43,8 @@ if __name__ == '__main__':
                         default='jpg', choices=['jpg', 'png', 'tiff'], help='type of file to look for')
     parser.add_argument('--roi_per_dim', metavar='roi_per_dim', default=10,
                         help='the number of ROIs per axis in the mosaic')
+    parser.add_argument('--orig_roi_ptf', metavar='orig_roi_ptf',
+                        default=[], help='where the original ROIs live')
 
     # parse inputs from command line
     args = parser.parse_args()
@@ -54,6 +56,7 @@ if __name__ == '__main__':
     make_voc = str2bool(args.make_voc)
     anntem = args.annotation_template
     roi_per_dim = int(args.roi_per_dim)
+    orig_roi_ptf = args.orig_roi_ptf
 
     # if only processing one mosaic, put it into a dummy list for subsequent loops
     if os.path.isfile(path_to_mos):
@@ -89,6 +92,9 @@ if __name__ == '__main__':
             # use the number to get the coordinate pd array
             coords = read_nested_pd(all_coords, f'mos_{num}')
 
+            if orig_roi_ptf:
+                coords['path'] = coords['path'].apply(lambda x: os.path.join(orig_roi_ptf, os.path.basename(x)))
+
             # get the mask associated with each region
             mask_rois = retrieve_regions(mask, coords)
 
@@ -100,7 +106,7 @@ if __name__ == '__main__':
             for kk in orig_rois.keys():
 
                 # make a mask of the entire object
-                tmp = fill_gap(thresh(orig_rois[kk]))
+                tmp = fill_gap(thresh(orig_rois[kk], threshold=250))
                 gen_msk, genbb = big_region(tmp, pad=5)  # assume default settings
 
                 # binarize and invert the egg mask
@@ -110,14 +116,22 @@ if __name__ == '__main__':
                 egg_msk = 1 - egg_msk
 
                 # get the egg bounding box
-                _, eggbb = big_region(egg_msk, pad=5)
+                try:
+                    _, eggbb = big_region(egg_msk, pad=5)
 
-                # make the bounding boxes into one array
-                bbox = np.vstack((genbb, eggbb))
+                    # make the bounding boxes into one array
+                    bbox = np.vstack((genbb, eggbb))
 
-                # add them together to get the complete mask
-                # [0 == background, 1 == copepod, 2 == eggs]
-                msk = gen_msk + egg_msk
+                    # add them together to get the complete mask
+                    # [0 == background, 1 == copepod, 2 == eggs]
+                    msk = gen_msk + egg_msk
+
+                except ValueError:
+
+                    # handler if no egg mask
+                    print('no eggs in', os.path.basename(kk))
+                    bbox = np.array(genbb)
+                    msk = gen_msk
 
                 # for now assume using VOC file structure
                 out_msk = os.path.join(output_path, 'Segmentation', os.path.basename(kk))
