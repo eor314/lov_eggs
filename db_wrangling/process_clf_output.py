@@ -38,7 +38,7 @@ eggs['object_length_mm'] = eggs['object_major']*eggs['sample_pixel']  #fill in t
 #ptf = '/Users/eorenstein/Documents/eggs-data/outputs/resnet18_1613491390_model_conv_1613494049'
 
 # split randomly
-ptf = '/Users/eorenstein/Documents/eggs-data/outputs/resnet18_1613404759_model_conv_1613558460'
+#ptf = '/Users/eorenstein/Documents/eggs-data/outputs/resnet18_1613404759_model_conv_1613558460'
 
 t_neg = list2subdf(os.path.join(ptf, 'copepod', 'copepod.txt'), copes)
 f_pos = list2subdf(os.path.join(ptf, 'copepod', 'egg.txt'), copes)
