@@ -25,6 +25,7 @@ if __name__ == '__main__':
     subpct = args.subpct
     ftype = args.file_type
     
+    
     # check inputs
     assert (os.path.isdir(ptf)), 'check that path_to_images is valid file path'
     assert (os.path.isfile(proc_list)), 'check that proc_list points to a text file'

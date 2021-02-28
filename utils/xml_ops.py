@@ -5,6 +5,24 @@ import os
 from make_mosaic_psd import get_dim
 
 
+def read_xml(xmlptf):
+    """
+    read in an xml file and return BeautifulSoup object
+    :param xmlptf: absolute path to xml fine
+    :return out: bs4 object
+    """
+    
+    # read document to workspace
+    with open(xmlptf, 'r') as ff:
+        temp = ff.read()
+        ff.close()
+
+    # make it into a soup object
+    out = BeautifulSoup(temp, 'xml')
+    
+    return out
+
+
 def populate_voc(template, outdir, imgptf, bbox, label):
     """
     iterate over all the xml files in the annotations directory, consolidate, and copy
@@ -15,13 +33,8 @@ def populate_voc(template, outdir, imgptf, bbox, label):
     :param label: labels corresponding to bboxes and segments [list of ind]
     """
 
-    # read in the annotations
-    with open(template, 'r') as ff:
-        temp = ff.read()
-        ff.close()
-
-    # make it into a soup object
-    bs_data = BeautifulSoup(temp, 'xml')
+    # read the template
+    bs_data = read_xml(template)
 
     # insert folder path
     fold = bs_data.folder
@@ -94,3 +107,24 @@ def populate_voc(template, outdir, imgptf, bbox, label):
     with open(outpath, 'w') as ff:
         ff.write(str(bs_data))
         ff.close()
+
+        
+def change_bb(xmlin, lab, amt):
+    """
+    change the bounding box size around an object of a given label
+    :param xmlin: xml file to be changed [str]
+    :param lab: label of object to change [str]
+    :param amt: number of pixels to adjust in all directions [int]
+    """
+    
+    # read the xml file
+    bs_data = read_xml(xmlin)
+    
+    for item in bs_data.find_all("object"):
+        if item.find("name").string == lab:
+            item.xmin.string = str(int(item.xmin.string)+amt)
+            item.ymin.string = str(int(item.ymin.string)+amt)
+            item.xmax.string = str(int(item.xmax.string)-amt)
+            item.ymax.string = str(int(item.ymax.string)-amt)
+            
+    return(bs_data)
