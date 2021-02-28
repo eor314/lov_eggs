@@ -114,7 +114,7 @@ def change_bb(xmlin, lab, amt):
     change the bounding box size around an object of a given label
     :param xmlin: xml file to be changed [str]
     :param lab: label of object to change [str]
-    :param amt: number of pixels to adjust in all directions [int]
+    :param amt: number of pixels to adjust in all directions (positive shrinks, negative increases size) [int]
     """
     
     # read the xml file
