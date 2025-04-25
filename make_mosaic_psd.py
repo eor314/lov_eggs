@@ -51,12 +51,16 @@ if __name__ == '__main__':
                         default=100, help='Number of image per mosaic (make sure is is a perfect square)')
     parser.add_argument('--file_type', metavar='file_type',
                         default='jpg', choices=['jpg', 'png', 'tiff'], help='type of file to look for')
+    parser.add_argument('--has_scalebar', metavar='has_scalebar',
+                        help='whether the images have scalebars (to be removed before mosaicing)',
+                        action=argparse.BooleanOptionalAction)
 
     args = parser.parse_args()
 
     path_to_imgs = args.path_to_imgs
     file_type = args.file_type
     output_path = args.output_path
+    has_scalebar = args.has_scalebar
     num_imgs = int(args.num_images)
 
     # make the output directory if it does not exist, otherwise delete what is in there
@@ -92,7 +96,7 @@ if __name__ == '__main__':
         mx_dim = tmp[['width', 'height']].max(axis=1).max()
 
         # tile the ROIs
-        tmp_mos, tmp_coor = tile_images(tmp['path'].to_list(), 10, resize=mx_dim)
+        tmp_mos, tmp_coor = tile_images(tmp['path'].to_list(), 10, resize=mx_dim, has_scalebar=has_scalebar)
 
         # put the coordinates into the dataframe
         tmp['upper_left_coord'] = tmp_coor

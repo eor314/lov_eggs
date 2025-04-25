@@ -4,14 +4,51 @@ from PIL import Image
 from skimage import morphology, measure
 
 
-def get_dim(img):
+def read_crop_image(img, has_scalebar=False):
+    """
+    read an image, crop pixels at the bottom and possibly crop to center on the object
+    :param img: absolute path to image [str]
+    :param has_scalebar: number of pixels to crop at the bottom [int]
+    :return: the image, cropped
+    """
+    im = cv2.imread(img, 0)
+
+    # crop bottom
+    if has_scalebar:
+        h = im.shape[0]
+        im = im[0:(h-31),:]
+
+    # NB: this seems dangerous since the background is not pure white on UVP images
+    # # center on object
+    # im = 255 - im
+    # sum_col = np.sum(im, 0)
+    # sum_row = np.sum(im, 1)
+    #
+    # obj_col = np.where(sum_col > 100)
+    # min_col = np.min(obj_col)
+    # max_col = np.max(obj_col)
+    #
+    # obj_row = np.where(sum_row > 100)
+    # min_row = np.min(obj_row)
+    # max_row = np.max(obj_row)
+    #
+    # im = im[min_row:max_row,min_col:max_col]
+    # im = 255 - im
+    #
+    # cv2.imshow('image',im)
+    # cv2.waitKey(0)
+
+    return im
+
+
+def get_dim(img, has_scalebar=False):
     """
     return biggest of image dimensions
     :param img: absolute path to image [str]
     :return: max(width, height) [int]
     """
-    im = Image.open(img)
-    wid, hgt = im.size
+    im = read_crop_image(img, has_scalebar=has_scalebar)
+    hgt, wid = im.shape
     return [wid, hgt]
 
 
@@ -109,7 +146,7 @@ def pad_img(img, new_dim):
     return out, (yy, xx)
 
 
-def tile_images(images, tile_dim, resize=128):
+def tile_images(images, tile_dim, resize=128, has_scalebar=False):
     """
     takes a list of images, pads, tiles and retains coords of each
     :param images: input list of image paths
@@ -130,7 +167,7 @@ def tile_images(images, tile_dim, resize=128):
         jj = idx // tile_dim
 
         # read gray scale image
-        im_in = cv2.imread(img, 0)
+        im_in = read_crop_image(img, has_scalebar=has_scalebar)
         pd_im, offset = pad_img(im_in, resize)
 
         out[jj*resize:jj*resize+resize, ii*resize:ii*resize+resize] = pd_im
