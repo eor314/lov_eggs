@@ -86,9 +86,6 @@ def retrieve_regions(img, dim_coords):
     # make into numpy array
     xx = np.array(img)
 
-    # rotate back to original coordinates
-    xx = np.rot90(xx)
-
     out = {}
     # iterate over each row of the data frame and retrieve the mask
     for idx, row in dim_coords.iterrows():
