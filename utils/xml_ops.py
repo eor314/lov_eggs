@@ -18,7 +18,7 @@ def read_xml(xmlptf):
         ff.close()
 
     # make it into a soup object
-    out = BeautifulSoup(temp, 'xml')
+    out = BeautifulSoup(temp, 'lxml-xml')
     
     return out
 
