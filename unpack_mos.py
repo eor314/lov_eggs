@@ -63,6 +63,11 @@ if __name__ == '__main__':
     else:
         sys.exit('Check that mosaic input is either path to PSD file or directory containing PSD files')
 
+    # create output directories
+    os.makedirs(os.path.join(output_path, 'Segmentation'), exist_ok=True)
+    os.makedirs(os.path.join(output_path, 'JPEGImages'), exist_ok=True)
+    os.makedirs(os.path.join(output_path, 'Annotations'), exist_ok=True)
+
     # if the input is a json document, process accordingly
     if os.path.isfile(path_to_coords):
 
