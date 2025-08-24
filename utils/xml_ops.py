@@ -33,6 +33,9 @@ def populate_voc(template, outdir, imgptf, bbox, label):
     :param label: labels corresponding to bboxes and segments [list of ind]
     """
 
+    if not os.path.exists(imgptf):
+        print(f"Error: Image file not found at {imgptf}")
+
     # read the template
     bs_data = read_xml(template)
 
