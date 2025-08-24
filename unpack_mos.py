@@ -39,8 +39,6 @@ if __name__ == '__main__':
                         default=True, help='Indicate whether voc xml files is needed [bool]')
     parser.add_argument('--annotation_template', metavar='annotation_template',
                         default='lov_voc_template.xml', help='Location of template for VOC xml annotation file')
-    parser.add_argument('--file_type', metavar='file_type',
-                        default='jpg', choices=['jpg', 'png', 'tiff'], help='type of file to look for')
     parser.add_argument('--roi_per_dim', metavar='roi_per_dim', default=10,
                         help='the number of ROIs per axis in the mosaic')
     parser.add_argument('--orig_roi_ptf', metavar='orig_roi_ptf',
@@ -51,7 +49,6 @@ if __name__ == '__main__':
 
     path_to_mos = args.path_to_mos
     path_to_coords = args.path_to_coords
-    file_type = args.file_type
     output_path = args.output_path
     make_voc = str2bool(args.make_voc)
     anntem = args.annotation_template
