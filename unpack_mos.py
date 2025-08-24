@@ -59,7 +59,7 @@ if __name__ == '__main__':
     if os.path.isfile(path_to_mos):
         moz = [path_to_mos]
     elif os.path.isdir(path_to_mos):
-        moz = glob.glob(os.path.join(path_to_mos, '*.psd'))
+        moz = sorted(glob.glob(os.path.join(path_to_mos, '*.psd')))
     else:
         sys.exit('Check that mosaic input is either path to PSD file or directory containing PSD files')
 
