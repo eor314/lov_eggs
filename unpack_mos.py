@@ -135,7 +135,7 @@ if __name__ == '__main__':
 
                 # make mask into color image for storage [default for skimage routine sets cope as red, eggs as blue]
                 msk = label2rgb(msk, bg_label=0)
-                imwrite(out_msk, msk*255)
+                imwrite(out_msk.replace('jpg','png'), msk*255)
 
                 out_roi = os.path.join(output_path, 'JPEGImages', os.path.basename(kk))
 
