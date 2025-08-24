@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from psd_tools import PSDImage
 import os
+import io
 
 
 def read_nested_pd(pd_dict, entry):
@@ -16,7 +17,7 @@ def read_nested_pd(pd_dict, entry):
     temp = pd_dict[entry]
 
     # make into the dataframe
-    out = pd.read_json(temp)
+    out = pd.read_json(io.StringIO(temp))
 
     return out
 
