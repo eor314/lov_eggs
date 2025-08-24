@@ -118,9 +118,9 @@ def big_region(bn_img, conn=2, bg=0, pad=0):
         out_bbox = props[ind].bbox
         out_bbox = np.asarray(out_bbox) + np.array([-pad, -pad, pad, pad])
 
-        return out_mask.astype(np.int), out_bbox
+        return out_mask.astype(np.int32), out_bbox
     else:
-        return out_mask.astype(np.int)
+        return out_mask.astype(np.int32)
 
 
 def pad_img(img, new_dim):
