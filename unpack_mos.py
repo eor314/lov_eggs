@@ -119,14 +119,17 @@ if __name__ == '__main__':
 
                 # get the egg bounding box
                 try:
-                    _, eggbb = big_region(egg_msk, pad=5)
+                    # get the biggest region in the egg mask
+                    # to avoid small pixels here and there from colouring mistakes
+                    # add padding around to define the bounding box
+                    egg_msk, eggbb = big_region(egg_msk, pad=5)
 
                     # make the bounding boxes into one array
                     bbox = np.vstack((genbb, eggbb))
 
-                    # add them together to get the complete mask
+                    # combine the masks
                     # [0 == background, 1 == copepod, 2 == eggs]
-                    msk = gen_msk + egg_msk
+                    msk = np.where(egg_msk==1, egg_msk*2, gen_msk)
 
                 except ValueError:
 
