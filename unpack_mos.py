@@ -108,7 +108,7 @@ if __name__ == '__main__':
             for kk in orig_rois.keys():
 
                 # make a mask of the entire object
-                tmp = fill_gap(thresh(orig_rois[kk], threshold=250))
+                tmp = fill_gap(thresh(orig_rois[kk], threshold=245), dim=2)
                 gen_msk, genbb = big_region(tmp, pad=5)  # assume default settings
 
                 # binarize and invert the egg mask
