@@ -11,6 +11,22 @@ from utils.mosaic_tools import read_psd, read_nested_pd, layers2gray, retrieve_r
 from utils.img_proc import thresh, fill_gap, big_region, get_dim
 from utils.xml_ops import populate_voc
 
+# # Display an image
+# def imshow(x):
+#     from matplotlib import pyplot as plt
+#     # plt.imshow(x, cmap='gray', vmin=0, vmax=255)
+#     plt.imshow(x)
+#     plt.show()
+
+# # display a ROI and its corresponding image
+# # x = dict of ROIs
+# # i = index of the ROI to compare
+# def compare_roi(x, i):
+#     path = list(x.keys())[i]
+#     imshow(x[path])
+#     from skimage import io
+#     img = io.imread(path)
+#     imshow(img)
 
 def str2bool(v):
     """
@@ -54,6 +70,15 @@ if __name__ == '__main__':
     anntem = args.annotation_template
     roi_per_dim = int(args.roi_per_dim)
     orig_roi_ptf = args.orig_roi_ptf
+
+    # path_to_mos = '../mosaics/2020/mos_3_coloured.psd'
+    # path_to_coords = '../mosaics/2020/dims_coords.json'
+    # file_type = '.jpg'
+    # output_path = 'test'
+    # make_voc = 'True'
+    # anntem = 'lov_voc_template.xml'
+    # roi_per_dim = '10'
+    # orig_roi_ptf = '../images/2020/'
 
     # if only processing one mosaic, put it into a dummy list for subsequent loops
     if os.path.isfile(path_to_mos):
