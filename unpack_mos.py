@@ -66,7 +66,8 @@ if __name__ == '__main__':
     # create output directories
     os.makedirs(os.path.join(output_path, 'Segmentation'), exist_ok=True)
     os.makedirs(os.path.join(output_path, 'JPEGImages'), exist_ok=True)
-    os.makedirs(os.path.join(output_path, 'Annotations'), exist_ok=True)
+    if make_voc:
+        os.makedirs(os.path.join(output_path, 'Annotations'), exist_ok=True)
 
     # if the input is a json document, process accordingly
     if os.path.isfile(path_to_coords):
@@ -150,9 +151,10 @@ if __name__ == '__main__':
                 if not os.path.exists(out_roi):
                     imwrite(out_roi, orig_rois[kk])
 
-                # make the VOC file
-                populate_voc(anntem, os.path.join(output_path, 'Annotations'),
-                             kk, bbox, ['Copepod', 'Eggs'])
+                if make_voc:
+                    # make the VOC file
+                    populate_voc(anntem, os.path.join(output_path, 'Annotations'),
+                                 kk, bbox, ['Copepod', 'Eggs'])
 
             print('done with', mos)
 
