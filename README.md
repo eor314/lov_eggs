@@ -13,7 +13,23 @@ Requirements:
 - sklearn
 - bs4
 
+## install dependencies
+
+```
+conda create --name copeggs python=3.11
+conda activate copeggs
+conda install scikit-image numpy pandas bs4 opencv matplotlib lxml
+pip install psd_tools pytoshop
+```
+
+or, now
+
+```
+conda env create -f environment.yml
+```
+
 ### NameError name packbits is not defined
+
 pytoshop has a NameError in python 3.7 when trying to write psd files. Was able to fix from this <a href='https://github.com/mdboom/pytoshop/issues/9#issuecomment-534904333'>issue discussion</a>:
 
 > open this file:
